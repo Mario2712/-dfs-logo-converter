@@ -20,7 +20,7 @@ def _load(path: Path):
     return im, np.array(im.convert("RGBA"))
 
 
-@pytest.mark.parametrize("key", ["alpha", "white_jpg", "wide", "tiny"])
+@pytest.mark.parametrize("key", ["alpha", "white_jpg", "wide", "tiny", "gap"])
 def test_dfs_requirements(samples, tmp_path, key):
     out = tmp_path / "out.gif"
     convert_file(samples[key], out)
@@ -118,3 +118,16 @@ def test_cli_folder(samples, tmp_path):
     assert len(gifs) >= 4
     for g in gifs:
         assert Image.open(g).size == (144, 144)
+
+
+def test_gap_in_outline_does_not_leak(samples):
+    """Kleine Lücke in der Umrandung: Innenfläche darf nicht transparent werden."""
+    from dfslogo import load_image
+    src = load_image(samples["gap"])
+    inner = (30, 72)  # weißes Innenfeld (zwischen Rahmen und rotem Balken)
+    r = convert_image(src)
+    px = np.array(r.preview)[inner]
+    assert px[3] == 255 and px[:3].min() > 235, px
+    # Gegenprobe: ohne Engstellen-Sperre sickert der Fill durch
+    r2 = convert_image(src, Options(close_gaps=False))
+    assert np.array(r2.preview)[inner][3] == 0

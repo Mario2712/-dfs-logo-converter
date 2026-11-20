@@ -37,7 +37,14 @@ def make_all(out: Path) -> dict[str, Path]:
     p = out / "wide_beige.png"; im.save(p); paths["wide"] = p
     # 4) Sehr kleines Logo (Hochskalieren)
     p = out / "tiny.png"; _crest((60, 60), (0, 0, 0, 0)).save(p); paths["tiny"] = p
-    # 5) SVG
+    # 5) Umrandung mit schmaler Lücke, weißes Innenfeld (wie UFC Hallein)
+    im = Image.new("RGB", (600, 600), (255, 255, 255))
+    d = ImageDraw.Draw(im)
+    d.rectangle([100, 100, 500, 500], outline=(20, 20, 20), width=14)
+    d.rectangle([297, 90, 303, 116], fill=(255, 255, 255))   # 7 px Lücke oben
+    d.rectangle([200, 250, 400, 350], fill=(200, 20, 30))
+    p = out / "gap_outline.png"; im.save(p); paths["gap"] = p
+    # 6) SVG
     p = out / "logo.svg"
     p.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">'
                  '<rect x="5" y="5" width="190" height="90" rx="20" fill="#1a3c8f"/>'

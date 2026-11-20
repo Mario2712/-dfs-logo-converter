@@ -60,6 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Farbtoleranz für den Hintergrund, 5–120 (Standard: 40)")
     ap.add_argument("--innen", action="store_true",
                     help="Auch eingeschlossene Flächen in Hintergrundfarbe entfernen")
+    ap.add_argument("--keine-lueckensperre", action="store_true",
+                    help="Engstellen-Sperre abschalten (Flood-Fill auch durch schmale Lücken)")
     ap.add_argument("--schwelle", type=float, default=0.5,
                     help="Alpha-Schwelle für sichtbare Kantenpixel, 0.1–0.9 (Standard: 0.5)")
     ap.add_argument("--dither", action="store_true",
@@ -83,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
             background={"auto": "auto", "immer": "always", "nie": "never"}[args.hintergrund],
             tolerance=args.toleranz,
             remove_enclosed=args.innen,
+            close_gaps=not args.keine_lueckensperre,
             sharpen=not args.nicht_schaerfen,
             dither=args.dither,
         )

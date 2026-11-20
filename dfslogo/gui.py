@@ -107,6 +107,9 @@ class App:
         self.enclosed_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(s, text="Auch eingeschlossene Flächen\nentfernen (z. B. Lücken)",
                         variable=self.enclosed_var, command=self.schedule).pack(anchor="w", **pad)
+        self.gaps_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(s, text="Kleine Lücken in Umrandungen\nüberbrücken (empfohlen)",
+                        variable=self.gaps_var, command=self.schedule).pack(anchor="w", **pad)
 
         ttk.Separator(s).pack(fill="x", pady=6)
         r = ttk.Frame(s)
@@ -196,6 +199,7 @@ class App:
             background={"auto": "auto", "immer": "always", "nie": "never"}[self.bg_var.get()],
             tolerance=float(self.tol_var.get()),
             remove_enclosed=self.enclosed_var.get(),
+            close_gaps=self.gaps_var.get(),
             sharpen=self.sharpen_var.get(),
             dither=self.dither_var.get(),
         )

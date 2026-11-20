@@ -49,6 +49,7 @@ class Options:
     background: str = "auto"  # "auto" | "always" | "never"
     tolerance: float = 40.0
     remove_enclosed: bool = False
+    close_gaps: bool = True   # Engstellen-Sperre gegen "Durchsickern" ins Logo
     sharpen: bool = True
     dither: bool = False
     max_colors: int = 255
@@ -157,7 +158,8 @@ def convert_image(img: Image.Image, opts: Options | None = None) -> Result:
             info["background"] = "nicht entfernt (Rand uneinheitlich)"
         else:
             rgba = bgmod.remove_background(
-                rgba, bg, tolerance=opts.tolerance, remove_enclosed=opts.remove_enclosed
+                rgba, bg, tolerance=opts.tolerance, remove_enclosed=opts.remove_enclosed,
+                gap_radius=None if opts.close_gaps else 0,
             )
             info["background"] = f"entfernt ({info['background_color']})"
 

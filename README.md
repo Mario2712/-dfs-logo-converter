@@ -53,6 +53,7 @@ dfslogo logo.jpg --matte weiss --innen # Optionen, siehe dfslogo --help
 | `--hintergrund auto\|immer\|nie` | Hintergrund entfernen. `auto` entfernt ihn nur, wenn der Bildrand einheitlich ist |
 | `--toleranz 40` | Wie stark eine Farbe vom Hintergrund abweichen darf, um noch als Hintergrund zu gelten (bei JPG-Artefakten erhöhen) |
 | `--innen` | Auch eingeschlossene Flächen in Hintergrundfarbe entfernen (z. B. Lücken zwischen Buchstaben). **Achtung:** Entfernt dann auch weiße Logo-Teile |
+| `--keine-lueckensperre` | Engstellen-Sperre abschalten (siehe unten). Normalerweise nicht nötig |
 | `--rand 2` | Freier Rand in Pixeln |
 | `--schwelle 0.5` | Ab welcher Deckkraft ein Kantenpixel sichtbar bleibt |
 | `--dither` | Dithering, nur für Logos mit Verläufen oder Fotos sinnvoll |
@@ -69,7 +70,9 @@ unsichtbar) und **höchstens 256 Farben**. Die Pipeline ist darauf ausgelegt:
 2. **Hintergrund entfernen:** Die Hintergrundfarbe wird aus den Randpixeln geschätzt und
    von außen per Flood-Fill entfernt, sodass Weiß *im* Wappen erhalten bleibt. Im
    Kantenbereich wird die Deckkraft jedes Pixels geschätzt und die Farbe „entmischt“.
-   Dadurch entsteht kein heller Saum.
+   Dadurch entsteht kein heller Saum. Eine **Engstellen-Sperre** verhindert, dass der Fill
+   durch schmale Lücken in einer Umrandung ins Logo-Innere „durchsickert“, z. B. zwischen
+   Ball und Rahmen. Solche Lücken bis etwa 0,8 % der Bildgröße werden überbrückt.
 3. **Zuschneiden** auf den sichtbaren Inhalt.
 4. **Seitenverhältnis-treu skalieren** auf 140 px (bei 2 px Rand) an der längeren Seite und
    mittig auf 144×144 setzen.
