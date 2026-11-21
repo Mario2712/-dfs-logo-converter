@@ -14,10 +14,11 @@ dependencies = [
     "scipy>=1.10",
     "imagequant>=1.1",     # libimagequant: beste Farbpaletten (GPL-3.0)
     "tkinterdnd2>=0.4",    # Drag & Drop in der GUI
+    "resvg-py>=0.5",       # SVG-Rendering ohne Systembibliothek
 ]
 
 [project.optional-dependencies]
-svg = ["cairosvg>=2.7"]
+svg = ["cairosvg>=2.7"]   # nur Fallback, falls resvg-py fehlt (braucht die Cairo-Bibliothek)
 dev = ["pytest>=7", "pyinstaller>=6"]
 
 [project.scripts]
