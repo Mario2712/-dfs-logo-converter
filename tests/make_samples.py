@@ -1,6 +1,7 @@
 """Erzeugt synthetische Testlogos (werden von den Tests genutzt)."""
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+
+from PIL import Image, ImageDraw
 
 
 def _crest(size, bg):

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import sys,json,subprocess;d=json.load(sys.stdin);f=(d.get('tool_input') or {}).get('file_path') or '';f.endswith('.py') or sys.exit(0);r=subprocess.run([sys.executable,'-m','ruff','check','--output-format','concise',f],capture_output=True,text=True);sys.stderr.write(r.stdout+r.stderr);sys.exit(2 if r.returncode else 0)\"",
+            "timeout": 30,
+            "statusMessage": "ruff check"
+          }
+        ]
+      }
+    ]
+  }
+}
