@@ -6,7 +6,6 @@ from PIL import Image
 
 from dfslogo import Options, convert_file, convert_image, parse_color
 from dfslogo.cli import main as cli_main
-
 from make_samples import make_all
 
 
