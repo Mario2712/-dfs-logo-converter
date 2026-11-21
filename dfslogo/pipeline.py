@@ -14,6 +14,7 @@ Schritte:
 from __future__ import annotations
 
 import io
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -38,6 +39,9 @@ SUPPORTED_EXTENSIONS = RASTER_EXTENSIONS | {".svg"}
 # und hält die Verarbeitung schnell.
 WORKING_MAX = 1200
 SVG_RENDER_SIZE = 1200
+# So viele Bytes werden gelesen, um eine SVG am Inhalt zu erkennen
+# (reicht auch für lange Kommentare/DOCTYPE vor dem <svg>-Element).
+SVG_SNIFF_BYTES = 64 * 1024
 
 
 @dataclass
@@ -88,21 +92,54 @@ def parse_color(value: str) -> tuple[int, int, int]:
 
 
 # --------------------------------------------------------------------------- 1
+def is_svg_file(path: str | Path) -> bool:
+    """Erkennt SVG am Inhalt statt an der Endung (z. B. eine in .png umbenannte SVG)."""
+    with open(path, "rb") as f:
+        head = f.read(SVG_SNIFF_BYTES)
+    start = head.removeprefix(b"\xef\xbb\xbf").lstrip()
+    # Vor <svg dürfen XML-Deklaration, Kommentare und DOCTYPE stehen.
+    return start.startswith(b"<") and re.search(rb"<svg[\s>]", head, re.IGNORECASE) is not None
+
+
+def _render_svg(path: Path) -> Image.Image:
+    """Rendert eine SVG so, dass die längere Seite SVG_RENDER_SIZE Pixel hat."""
+    try:
+        import resvg_py  # type: ignore
+    except ImportError:
+        resvg_py = None
+
+    try:
+        if resvg_py is not None:
+            # Erst in Originalgröße rendern, um das Seitenverhältnis zu kennen.
+            w, h = Image.open(io.BytesIO(bytes(resvg_py.svg_to_bytes(svg_path=str(path))))).size
+            zoom = SVG_RENDER_SIZE / max(w, h, 1)
+            data = bytes(resvg_py.svg_to_bytes(svg_path=str(path), zoom=zoom,
+                                               resources_dir=str(path.parent)))
+        else:
+            try:
+                import cairosvg  # type: ignore
+            except Exception as exc:  # ImportError oder fehlende Cairo-Bibliothek (OSError)
+                raise RuntimeError(
+                    "Für SVG-Dateien wird das Paket 'resvg-py' benötigt "
+                    "(pip install resvg-py). Alternativ das Logo als PNG exportieren."
+                ) from exc
+            data = cairosvg.svg2png(bytestring=path.read_bytes(), url=str(path),
+                                    output_width=SVG_RENDER_SIZE)
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        raise RuntimeError(f"SVG-Datei konnte nicht gelesen werden: {exc}") from exc
+
+    img = Image.open(io.BytesIO(data))
+    img.load()
+    return img.convert("RGBA")
+
+
 def load_image(path: str | Path) -> Image.Image:
-    """Lädt ein Bild als RGBA. SVG wird in hoher Auflösung gerendert."""
+    """Lädt ein Bild als RGBA. SVG (am Inhalt erkannt) wird in hoher Auflösung gerendert."""
     path = Path(path)
-    if path.suffix.lower() == ".svg":
-        try:
-            import cairosvg  # type: ignore
-        except Exception as exc:  # pragma: no cover
-            raise RuntimeError(
-                "Für SVG-Dateien wird das Paket 'cairosvg' (und die Cairo-Bibliothek) "
-                "benötigt. Alternativ das Logo als PNG exportieren."
-            ) from exc
-        data = cairosvg.svg2png(url=str(path), output_width=SVG_RENDER_SIZE)
-        img = Image.open(io.BytesIO(data))
-        img.load()
-        return _limit_size(img.convert("RGBA"))
+    if is_svg_file(path):
+        return _limit_size(_render_svg(path))
 
     img = Image.open(path)
     img.seek(0)  # bei animierten GIFs: erstes Bild

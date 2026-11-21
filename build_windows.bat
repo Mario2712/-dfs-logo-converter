@@ -15,6 +15,7 @@ pyinstaller --noconfirm --onefile --windowed ^
     --name "DFS-Logo-Converter" ^
     --collect-all tkinterdnd2 ^
     --collect-all imagequant ^
+    --collect-all resvg_py ^
     --hidden-import PIL._tkinter_finder ^
     run_gui.py || goto :error
 

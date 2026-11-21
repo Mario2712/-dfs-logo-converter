@@ -13,8 +13,7 @@ direkt in **Das Fußball Studio (DFS)** eingebunden werden können.
 Voraussetzung: Python 3.10 oder neuer (unter Windows von python.org, Tk ist dort enthalten).
 
 ```bash
-pip install -e .            # Grundinstallation
-pip install -e ".[svg]"     # optional: SVG-Eingabe (braucht die Cairo-Bibliothek)
+pip install -e .            # Installation inkl. SVG-Unterstützung (resvg-py)
 ```
 
 ### Als eigenständige App (ohne Python auf dem Laptop)
@@ -65,8 +64,9 @@ dfslogo logo.jpg --matte weiss --innen # Optionen, siehe dfslogo --help
 GIF kennt **nur binäre Transparenz** (ein Pixel ist entweder ganz sichtbar oder ganz
 unsichtbar) und **höchstens 256 Farben**. Die Pipeline ist darauf ausgelegt:
 
-1. **Einlesen:** PNG, JPG, WEBP, GIF, BMP, TIFF, SVG. Große Bilder werden auf 1200 px
-   Arbeitsgröße gebracht.
+1. **Einlesen:** PNG, JPG, WEBP, GIF, BMP, TIFF, SVG. Das Format wird am Inhalt erkannt,
+   eine umbenannte SVG funktioniert also auch. SVGs rendert `resvg-py` ohne zusätzliche
+   Systembibliothek. Große Bilder werden auf 1200 px Arbeitsgröße gebracht.
 2. **Hintergrund entfernen:** Die Hintergrundfarbe wird aus den Randpixeln geschätzt und
    von außen per Flood-Fill entfernt, sodass Weiß *im* Wappen erhalten bleibt. Im
    Kantenbereich wird die Deckkraft jedes Pixels geschätzt und die Farbe „entmischt“.
@@ -103,7 +103,7 @@ GIF unvermeidbar.
 ## Entwicklung
 
 ```bash
-pip install -e ".[dev,svg]"
+pip install -e ".[dev]"
 pytest
 ```
 

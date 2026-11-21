@@ -84,11 +84,47 @@ def test_tiny_source_warns(samples):
 
 
 def test_svg(samples, tmp_path):
-    pytest.importorskip("cairosvg")
     out = tmp_path / "svg.gif"
     r = convert_file(samples["svg"], out)
     assert Image.open(out).size == (144, 144)
     assert r.info["logo_size"] == (140, 66)  # 190×90 → 140×66
+
+
+def test_svg_renamed_to_png(samples, tmp_path):
+    """Eine in .png umbenannte SVG muss am Inhalt erkannt werden."""
+    renamed = tmp_path / "logo_svg.png"
+    renamed.write_bytes(samples["svg"].read_bytes())
+    out = tmp_path / "renamed.gif"
+    r = convert_file(renamed, out)
+    assert Image.open(out).size == (144, 144)
+    assert r.info["logo_size"] == (140, 66)
+
+
+def test_png_renamed_to_svg(samples, tmp_path):
+    """Umgekehrt: ein PNG mit Endung .svg wird als Rasterbild gelesen."""
+    renamed = tmp_path / "crest.svg"
+    renamed.write_bytes(samples["alpha"].read_bytes())
+    convert_file(renamed, tmp_path / "out.gif")
+    assert Image.open(tmp_path / "out.gif").size == (144, 144)
+
+
+def test_svg_detection(tmp_path):
+    from dfslogo.pipeline import is_svg_file
+    p = tmp_path / "x"
+    p.write_bytes(b'\xef\xbb\xbf<?xml version="1.0"?>\n<!-- Kommentar -->\n'
+                  b'<!DOCTYPE svg>\n<svg xmlns="http://www.w3.org/2000/svg"/>')
+    assert is_svg_file(p)
+    p.write_bytes(b"<html><body>kein svgbild</body></html>")
+    assert not is_svg_file(p)
+
+
+def test_tall_svg_render_size(tmp_path):
+    """Hochformat-SVG: die längere Seite wird auf SVG_RENDER_SIZE gerendert, nicht die Breite."""
+    from dfslogo import load_image
+    p = tmp_path / "tall.svg"
+    p.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="1000">'
+                 '<rect width="100" height="1000" fill="red"/></svg>')
+    assert load_image(p).size == (120, 1200)
 
 
 def test_parse_color():
@@ -108,13 +144,9 @@ def test_noisy_background_not_removed_in_auto():
 def test_cli_folder(samples, tmp_path):
     out_dir = tmp_path / "cli"
     rc = cli_main([str(samples["alpha"].parent), "-o", str(out_dir), "--matte", "weiss"])
-    try:
-        import cairosvg  # noqa: F401
-        assert rc == 0
-    except ImportError:
-        assert rc == 1  # SVG ohne cairosvg → gemeldeter Fehler, Rest läuft weiter
+    assert rc == 0
     gifs = sorted(out_dir.glob("*_dfs.gif"))
-    assert len(gifs) >= 4
+    assert len(gifs) == len(samples)   # alle Beispiele inkl. SVG umgewandelt
     for g in gifs:
         assert Image.open(g).size == (144, 144)
 
